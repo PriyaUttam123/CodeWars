@@ -57,7 +57,7 @@ npm install
    - Choose "Web application"
    - Add authorized redirect URIs:
      ```
-     http://localhost:5000/api/auth/google/callback
+     http://localhost:3001/api/auth/google/callback
      ```
    - Click "Create"
 5. Copy the **Client ID** and **Client Secret**
@@ -70,11 +70,11 @@ Create `backend/.env` file:
 
 ```env
 # Server Configuration
-PORT=5000
+PORT=3001
 NODE_ENV=development
 
 # MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/codehub
+MONGODB_URI=mongodb://localhost:27017/codewars  # Default local MongoDB URI
 # OR for MongoDB Atlas:
 # MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/codehub
 
