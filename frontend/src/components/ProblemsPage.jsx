@@ -1,0 +1,314 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { API_ENDPOINTS } from '../config/api';
+
+const ProblemsPage = () => {
+  const navigate = useNavigate();
+  const [questions, setQuestions] = useState([]);
+  const [topics, setTopics] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState('All');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/');
+    }
+    fetchTopics();
+    fetchQuestions();
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchQuestions();
+  }, [selectedTopic, selectedDifficulty, searchTerm]);
+
+  const fetchTopics = async () => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.QUESTIONS}/topics/all`);
+      const data = await response.json();
+      if (data.success) {
+        setTopics(['All', ...data.data]);
+      }
+    } catch (error) {
+      console.error('Error fetching topics:', error);
+    }
+  };
+
+  const fetchQuestions = async () => {
+    setLoading(true);
+    try {
+      let url = API_ENDPOINTS.QUESTIONS;
+      const params = new URLSearchParams();
+
+      if (selectedTopic !== 'All') {
+        params.append('topic', selectedTopic);
+      }
+
+      if (selectedDifficulty !== 'All') {
+        params.append('difficulty', selectedDifficulty);
+      }
+
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      if (params.toString()) {
+        url += '?' + params.toString();
+      }
+
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setQuestions(data.data);
+      } else {
+        console.error('API returned success: false', data);
+        setQuestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      setQuestions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case 'Easy':
+        return 'text-green-400 bg-green-500/10';
+      case 'Medium':
+        return 'text-yellow-400 bg-yellow-500/10';
+      case 'Hard':
+        return 'text-red-400 bg-red-500/10';
+      default:
+        return 'text-gray-400 bg-gray-500/10';
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(API_ENDPOINTS.LOGOUT, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0e27] via-[#0f1535] via-[#1a2040] to-[#2a3f5f] text-white">
+      {/* Background gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-purple-500/10 pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-cyan-500/20 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-radial from-purple-500/20 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+      {/* Navigation Bar */}
+      <nav className="border-b border-gray-800 bg-[#0a0e27]/80 backdrop-blur-sm relative z-10">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <div className="bg-cyan-500 rounded-lg p-2 flex items-center justify-center">
+                <svg 
+                  className="w-5 h-5 text-white" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" 
+                  />
+                </svg>
+              </div>
+              <span 
+                onClick={() => navigate('/dashboard')}
+                className="text-white text-xl font-bold cursor-pointer hover:text-cyan-400 transition-colors"
+              >
+                CodeArena
+              </span>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="flex items-center gap-8">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                Active Rooms 🔥
+              </a>
+              <button 
+                onClick={() => navigate('/problems')}
+                className="text-white font-semibold border-b-2 border-cyan-500"
+              >
+                Problems 📋
+              </button>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                Leaderboard 🏆
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                About Us 📘
+              </a>
+            </div>
+
+            {/* Right Side Buttons */}
+            <div className="flex items-center gap-3">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+              <button className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              <button 
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-8 py-8 relative z-10">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Practice Problems</h1>
+          <p className="text-gray-400">Sharpen your coding skills with our curated problem set</p>
+        </div>
+
+        {/* Filters Section */}
+        <div className="bg-[#0f1425] border border-gray-700 rounded-xl p-6 mb-6">
+          <div className="grid grid-cols-3 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Search</label>
+              <input
+                type="text"
+                placeholder="Search problems..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#1a1f3a] border border-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            {/* Topic Filter */}
+            <div className="relative z-20">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Topic</label>
+              <select
+                value={selectedTopic}
+                onChange={(e) => setSelectedTopic(e.target.value)}
+                className="w-full bg-[#1a1f3a] border border-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 cursor-pointer appearance-none"
+              >
+                {topics.map((topic) => (
+                  <option key={topic} value={topic} className="bg-[#1a1f3a] text-white">
+                    {topic}
+                  </option>
+                ))}
+              </select>
+              <svg className="absolute right-3 top-10 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+
+            {/* Difficulty Filter */}
+            <div className="relative z-20">
+              <label className="block text-sm font-semibold text-gray-300 mb-2">Difficulty</label>
+              <select
+                value={selectedDifficulty}
+                onChange={(e) => setSelectedDifficulty(e.target.value)}
+                className="w-full bg-[#1a1f3a] border border-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 cursor-pointer appearance-none"
+              >
+                <option value="All" className="bg-[#1a1f3a] text-white">All</option>
+                <option value="Easy" className="bg-[#1a1f3a] text-white">Easy</option>
+                <option value="Medium" className="bg-[#1a1f3a] text-white">Medium</option>
+                <option value="Hard" className="bg-[#1a1f3a] text-white">Hard</option>
+              </select>
+              <svg className="absolute right-3 top-10 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Questions List */}
+        <div className="bg-[#0f1425] border border-gray-700 rounded-xl overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-400">Loading questions...</div>
+            </div>
+          ) : questions.length === 0 ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-400">No questions found</div>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-700">
+              {questions.map((question) => (
+                <div
+                  key={question._id}
+                  className="px-8 py-6 hover:bg-[#1a1f3a] transition-colors cursor-pointer border-l-4 border-transparent hover:border-cyan-500"
+                  onClick={() => navigate(`/coding/${question._id}`)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {question.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+                        {question.description}
+                      </p>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(question.difficulty)}`}>
+                          {question.difficulty}
+                        </span>
+                        {question.topics.map((topic) => (
+                          <span
+                            key={topic}
+                            className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ml-6 text-right">
+                      <div className="text-gray-400 text-sm">
+                        <div className="mb-1">{question.submissions} submissions</div>
+                        <div className="text-cyan-400 font-semibold">{question.acceptanceRate}% AC</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProblemsPage;
