@@ -81,6 +81,12 @@ const TargetPage = () => {
               <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 Active Rooms 🔥
               </a>
+              <button 
+                onClick={() => navigate('/problems')}
+                className="text-gray-300 hover:text-white transition-colors bg-none border-none cursor-pointer"
+              >
+                Problems 📋
+              </button>
               <a href="#" className="text-gray-300 hover:text-white transition-colors">
                 Challenges 📋
               </a>
