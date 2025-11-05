@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import LoginPage from './components/LoginPage'
+import RegisterPage from './components/RegisterPage'
 import TargetPage from './components/TargetPage'
 import CodingPlatform from './components/CodingPlatform'
 import ProblemsPage from './components/ProblemsPage'
@@ -14,6 +15,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/dashboard" element={<TargetPage />} />
           <Route path="/active-battles" element={<ActiveBattles />} />
           <Route path="/problems" element={<ProblemsPage />} />
